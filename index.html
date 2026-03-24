@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hello Cloudflare!</title>
+<style>
+  /* 页面背景渐变动画 */
+  body {
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(-45deg, #ff6ec4, #7873f5, #42e695, #f9d423);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+  }
+
+  @keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    25% { background-position: 50% 100%; }
+    50% { background-position: 100% 50%; }
+    75% { background-position: 50% 0%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  h1 {
+    font-size: 4rem;
+    color: white;
+    text-shadow: 2px 2px 20px rgba(0,0,0,0.5);
+    animation: fadeInScale 2s ease forwards;
+    opacity: 0;
+    transform: scale(0.5);
+    z-index: 1;
+  }
+
+  @keyframes fadeInScale {
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  p {
+    margin-top: 1rem;
+    font-size: 1.5rem;
+    color: white;
+    animation: fadeIn 3s ease forwards;
+    opacity: 0;
+    z-index: 1;
+  }
+
+  @keyframes fadeIn {
+    to { opacity: 1; }
+  }
+
+  button {
+    margin-top: 2rem;
+    padding: 0.8rem 2rem;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #fff;
+    background: rgba(255,255,255,0.2);
+    border: 2px solid #fff;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+    z-index: 1;
+  }
+
+  button:hover {
+    background: rgba(255,255,255,0.4);
+    transform: scale(1.1);
+  }
+
+  /* 粒子画布 */
+  canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+  }
+</style>
+</head>
+<body>
+  <h1>Hello, jianghupt和圣光</h1>
+  <p>欢迎来到您的个人网站，请在这里开始吧！！！！ 🚀</p>
+  <button onclick="alert('You clicked me!')">Click Me!</button>
+  <canvas id="particles"></canvas>
+
+<script>
+  // 粒子动画在浏览器端执行
+  const canvas = document.getElementById('particles');
+  const ctx = canvas.getContext('2d');
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+
+  const particles = [];
+  const numParticles = 100;
+
+  for (let i = 0; i < numParticles; i++) {
+    particles.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      vx: (Math.random() - 0.5) * 1.5,
+      vy: (Math.random() - 0.5) * 1.5,
+      size: Math.random() * 3 + 1,
+      color: 'hsla(' + Math.random()*360 + ', 80%, 70%, 0.8)'
+    });
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+
+      if(p.x < 0 || p.x > width) p.vx *= -1;
+      if(p.y < 0 || p.y > height) p.vy *= -1;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+      ctx.fillStyle = p.color;
+      ctx.fill();
+    });
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  // 鼠标互动
+  const mouse = {x: null, y: null};
+  window.addEventListener('mousemove', e => {
+    mouse.x = e.x;
+    mouse.y = e.y;
+  });
+
+  function interact() {
+    particles.forEach(p => {
+      const dx = p.x - mouse.x;
+      const dy = p.y - mouse.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if(dist < 100) {
+        const angle = Math.atan2(dy, dx);
+        const force = (100 - dist)/20;
+        p.vx += Math.cos(angle) * force;
+        p.vy += Math.sin(angle) * force;
+      }
+    });
+    requestAnimationFrame(interact);
+  }
+  interact();
+</script>
+</body>
+</html>
