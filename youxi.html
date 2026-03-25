@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>躲避方块小游戏</title>
 <style>
   body {
@@ -32,9 +33,8 @@
     border: 3px solid #555;
     border-radius: 10px;
     background: rgba(0,0,0,0.3);
-    display: block;
-    margin-top: 50px; /* 页面偏上 */
-    touch-action: none; /* 阻止触摸默认滚动 */
+    margin-top: 50px;
+    touch-action: none;
   }
 
   button {
@@ -73,7 +73,7 @@
 <body>
 
 <div id="scoreDisplay">分数: 0</div>
-<canvas id="gameCanvas" width="600" height="700"></canvas>
+<canvas id="gameCanvas"></canvas>
 
 <div>
   <button id="startBtn">开始游戏</button>
@@ -93,15 +93,27 @@
 </audio>
 
 <script>
-// ----------------- 游戏Canvas初始化 -----------------
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-const WIDTH = canvas.width;
-const HEIGHT = canvas.height;
 
-// 粒子背景
+let WIDTH = window.innerWidth * 0.8;
+let HEIGHT = window.innerHeight * 0.7;
+canvas.width = WIDTH;
+canvas.height = HEIGHT;
+
+// ----------------- 自适应窗口 -----------------
+window.addEventListener("resize", ()=>{
+  WIDTH = window.innerWidth * 0.8;
+  HEIGHT = window.innerHeight * 0.7;
+  canvas.width = WIDTH;
+  canvas.height = HEIGHT;
+  drawWelcome();
+});
+
+// ----------------- 粒子背景 -----------------
 const particles = [];
-for(let i=0;i<100;i++){
+const numParticles = 100;
+for(let i=0;i<numParticles;i++){
   particles.push({
     x: Math.random()*WIDTH,
     y: Math.random()*HEIGHT,
@@ -128,7 +140,8 @@ function drawBackground(){
 }
 
 // ----------------- 玩家和障碍 -----------------
-const player = { width: 50, height: 50, x: WIDTH/2-25, y: HEIGHT-70, speed: 8, color: "#00aaff" };
+let playerSize = Math.min(WIDTH, HEIGHT)/12;
+const player = { width: playerSize, height: playerSize, x: WIDTH/2-playerSize/2, y: HEIGHT-playerSize-20, color: "#00aaff" };
 let blocks = [];
 let blockSpeed = 5;
 let spawnInterval = 90;
@@ -156,9 +169,8 @@ function drawBlocks(){
 }
 
 function updatePlayer(){
-  // 电脑端箭头控制
-  if(keys["ArrowLeft"] && player.x>0) player.x -= player.speed;
-  if(keys["ArrowRight"] && player.x+player.width<WIDTH) player.x += player.speed;
+  if(keys["ArrowLeft"] && player.x>0) player.x -= player.width/10;
+  if(keys["ArrowRight"] && player.x+player.width<WIDTH) player.x += player.width/10;
 }
 
 function updateBlocks(){
@@ -177,7 +189,7 @@ function updateBlocks(){
 }
 
 function spawnBlock(){
-  const size = 50;
+  const size = playerSize;
   const x = Math.random()*(WIDTH-size);
   blocks.push({x:x, y:-size, width:size, height:size});
 }
@@ -200,7 +212,7 @@ function gameLoop(){
     if(spawnInterval>20) spawnInterval--;
     blockSpeed+=0.1;
     score++;
-    updateScore(); // 实时更新分数
+    updateScore();
   }
 
   drawPlayer();
@@ -222,9 +234,13 @@ function gameLoop(){
 
 // ----------------- 开始/停止 -----------------
 function startGame(){
+  player.width = playerSize;
+  player.height = playerSize;
+  player.x = WIDTH/2-player.width/2;
+  player.y = HEIGHT-player.height-20;
+
   gameOver=false;
   gameRunning=true;
-  player.x=WIDTH/2-player.width/2;
   blocks=[];
   blockSpeed=5;
   spawnInterval=90;
@@ -245,28 +261,35 @@ function stopGame(){
 document.getElementById("startBtn").addEventListener("click", startGame);
 document.getElementById("stopBtn").addEventListener("click", stopGame);
 
-// ----------------- 手机触控拖动玩家 -----------------
-let touchOffsetX = 0;
-canvas.addEventListener("touchstart", e => {
-  const t = e.touches[0];
-  if(t.clientX > player.x && t.clientX < player.x + player.width &&
-     t.clientY > player.y && t.clientY < player.y + player.height){
-    touchOffsetX = t.clientX - player.x;
+// ----------------- 手机触控拖动 -----------------
+let touchOffsetX = null;
+
+function getTouchPos(touch){
+  const rect = canvas.getBoundingClientRect();
+  return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+}
+
+canvas.addEventListener("touchstart", e=>{
+  const t = getTouchPos(e.touches[0]);
+  if(t.x > player.x && t.x < player.x + player.width &&
+     t.y > player.y && t.y < player.y + player.height){
+    touchOffsetX = t.x - player.x;
   } else {
     touchOffsetX = null;
   }
 });
-canvas.addEventListener("touchmove", e => {
+
+canvas.addEventListener("touchmove", e=>{
   if(touchOffsetX !== null){
-    const t = e.touches[0];
-    player.x = t.clientX - touchOffsetX;
+    const t = getTouchPos(e.touches[0]);
+    player.x = t.x - touchOffsetX;
     if(player.x < 0) player.x = 0;
     if(player.x + player.width > WIDTH) player.x = WIDTH - player.width;
     e.preventDefault();
   }
 });
 
-// 初始显示欢迎界面
+// ----------------- 欢迎界面 -----------------
 function drawWelcome(){
   drawBackground();
   ctx.fillStyle="white";
@@ -276,6 +299,7 @@ function drawWelcome(){
   ctx.font="24px Arial";
   ctx.fillText("按开始按钮开始游戏", WIDTH/2, HEIGHT/2+20);
 }
+
 drawWelcome();
 </script>
 </body>
