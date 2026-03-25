@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>躲避方块小游戏</title>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(-45deg, #ff6ec4, #7873f5, #42e695, #f9d423);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100vh;
+    color: white;
+  }
+
+  @keyframes gradientBG {
+    0% {background-position: 0% 50%;}
+    25% {background-position: 50% 100%;}
+    50% {background-position: 100% 50%;}
+    75% {background-position: 50% 0%;}
+    100% {background-position: 0% 50%;}
+  }
+
+  canvas#gameCanvas {
+    border: 3px solid #555;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.3);
+    display: block;
+    margin-top: 50px; /* 页面偏上 */
+  }
+
+  button {
+    font-size: 18px;
+    margin: 5px;
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  #startBtn { background-color: #00aaff; color: white; }
+  #stopBtn { background-color: #ff4444; color: white; }
+
+  #instructions {
+    margin-top: 10px;
+    text-align: center;
+    font-size: 18px;
+    max-width: 600px;
+  }
+
+  #scoreDisplay {
+    font-size: 24px;
+    font-weight: bold;
+    background: rgba(0,0,0,0.5);
+    padding: 5px 10px;
+    border-radius: 8px;
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+</style>
+</head>
+<body>
+
+<div id="scoreDisplay">分数: 0</div>
+<canvas id="gameCanvas" width="600" height="700"></canvas>
+
+<div>
+  <button id="startBtn">开始游戏</button>
+  <button id="stopBtn">停止游戏</button>
+</div>
+
+<div id="instructions">
+  <p>玩法说明：</p>
+  <p>用键盘左右方向键控制蓝色方块移动，躲避上方掉下来的红色方块。躲得越久，分数越高！</p>
+</div>
+
+<audio id="bgMusic" loop>
+  <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+</audio>
+<audio id="hitSound">
+  <source src="https://www.soundjay.com/button/beep-07.wav" type="audio/wav">
+</audio>
+
+<script>
+// ----------------- 游戏Canvas初始化 -----------------
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const WIDTH = canvas.width;
+const HEIGHT = canvas.height;
+
+// 粒子背景
+const particles = [];
+for(let i=0;i<100;i++){
+  particles.push({
+    x: Math.random()*WIDTH,
+    y: Math.random()*HEIGHT,
+    radius: Math.random()*3+1,
+    speed: Math.random()*0.5+0.2
+  });
+}
+
+function drawBackground(){
+  const gradient = ctx.createLinearGradient(0,0,0,HEIGHT);
+  gradient.addColorStop(0,"#1e1e2f");
+  gradient.addColorStop(1,"#121212");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0,0,WIDTH,HEIGHT);
+
+  for(let p of particles){
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.radius,0,Math.PI*2);
+    ctx.fillStyle = "rgba(255,255,255,0.4)";
+    ctx.fill();
+    p.y += p.speed;
+    if(p.y>HEIGHT){ p.y=0; p.x=Math.random()*WIDTH; }
+  }
+}
+
+// ----------------- 玩家和障碍 -----------------
+const player = { width: 50, height: 50, x: WIDTH/2-25, y: HEIGHT-70, speed: 8, color: "#00aaff" };
+let blocks = [];
+let blockSpeed = 5;
+let spawnInterval = 90;
+let frameCount = 0;
+let score = 0;
+let gameOver = false;
+let gameRunning = false;
+let keys = {};
+
+document.addEventListener("keydown", e=> keys[e.key]=true);
+document.addEventListener("keyup", e=> keys[e.key]=false);
+
+const bgMusic = document.getElementById("bgMusic");
+const hitSound = document.getElementById("hitSound");
+const scoreDisplay = document.getElementById("scoreDisplay");
+
+function drawPlayer(){
+  ctx.fillStyle = player.color;
+  ctx.fillRect(player.x, player.y, player.width, player.height);
+}
+
+function drawBlocks(){
+  ctx.fillStyle = "#ff4444";
+  for(let b of blocks) ctx.fillRect(b.x,b.y,b.width,b.height);
+}
+
+function updatePlayer(){
+  if(keys["ArrowLeft"] && player.x>0) player.x -= player.speed;
+  if(keys["ArrowRight"] && player.x+player.width<WIDTH) player.x += player.speed;
+}
+
+function updateBlocks(){
+  for(let b of blocks) b.y += blockSpeed;
+  blocks = blocks.filter(b=>b.y<HEIGHT);
+  for(let b of blocks){
+    if(player.x < b.x + b.width &&
+       player.x + player.width > b.x &&
+       player.y < b.y + b.height &&
+       player.y + player.height > b.y){
+      gameOver=true;
+      hitSound.play();
+      stopGame();
+    }
+  }
+}
+
+function spawnBlock(){
+  const size = 50;
+  const x = Math.random()*(WIDTH-size);
+  blocks.push({x:x, y:-size, width:size, height:size});
+}
+
+function updateScore(){
+  scoreDisplay.textContent = "分数: "+score;
+}
+
+// ----------------- 游戏循环 -----------------
+function gameLoop(){
+  if(!gameRunning) return;
+
+  drawBackground();
+  updatePlayer();
+  updateBlocks();
+
+  frameCount++;
+  if(frameCount%spawnInterval===0){
+    spawnBlock();
+    if(spawnInterval>20) spawnInterval--;
+    blockSpeed+=0.1;
+    score++;
+    updateScore(); // 实时更新分数
+  }
+
+  drawPlayer();
+  drawBlocks();
+
+  if(gameOver){
+    ctx.fillStyle="white";
+    ctx.font="48px Arial";
+    ctx.textAlign="center";
+    ctx.fillText("游戏结束!", WIDTH/2, HEIGHT/2);
+    ctx.font="30px Arial";
+    ctx.fillText("最终分数: "+score, WIDTH/2, HEIGHT/2+50);
+    bgMusic.pause();
+    return;
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+
+// ----------------- 开始/停止 -----------------
+function startGame(){
+  gameOver=false;
+  gameRunning=true;
+  player.x=WIDTH/2-player.width/2;
+  blocks=[];
+  blockSpeed=5;
+  spawnInterval=90;
+  frameCount=0;
+  score=0;
+  updateScore();
+  bgMusic.currentTime=0;
+  bgMusic.play();
+  gameLoop();
+}
+
+function stopGame(){
+  gameRunning=false;
+  bgMusic.pause();
+}
+
+// 按钮绑定
+document.getElementById("startBtn").addEventListener("click", startGame);
+document.getElementById("stopBtn").addEventListener("click", stopGame);
+
+// 初始显示欢迎界面
+function drawWelcome(){
+  drawBackground();
+  ctx.fillStyle="white";
+  ctx.font="48px Arial";
+  ctx.textAlign="center";
+  ctx.fillText("躲避方块小游戏", WIDTH/2, HEIGHT/2-50);
+  ctx.font="24px Arial";
+  ctx.fillText("按开始按钮开始游戏", WIDTH/2, HEIGHT/2+20);
+}
+drawWelcome();
+</script>
+</body>
+</html>
