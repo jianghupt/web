@@ -5,70 +5,70 @@
 <title>躲避方块小游戏</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <style>
-  body {
-    margin: 0;
-    overflow: hidden;
-    font-family: Arial, sans-serif;
-    background: linear-gradient(-45deg, #ff6ec4, #7873f5, #42e695, #f9d423);
-    background-size: 400% 400%;
-    animation: gradientBG 15s ease infinite;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    height: 100vh;
-    color: white;
-    text-align: center;
-  }
+body {
+  margin: 0;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(-45deg, #ff6ec4, #7873f5, #42e695, #f9d423);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  height: 100vh;
+  color: white;
+  text-align: center;
+}
 
-  @keyframes gradientBG {
-    0% {background-position: 0% 50%;}
-    25% {background-position: 50% 100%;}
-    50% {background-position: 100% 50%;}
-    75% {background-position: 50% 0%;}
-    100% {background-position: 0% 50%;}
-  }
+@keyframes gradientBG {
+  0% {background-position: 0% 50%;}
+  25% {background-position: 50% 100%;}
+  50% {background-position: 100% 50%;}
+  75% {background-position: 50% 0%;}
+  100% {background-position: 0% 50%;}
+}
 
-  canvas#gameCanvas {
-    border: 3px solid #555;
-    border-radius: 10px;
-    background: rgba(0,0,0,0.3);
-    display: block;
-    margin-top: 50px; /* 页面偏上 */
-    touch-action: none; /* 阻止触摸滚动 */
-  }
+canvas#gameCanvas {
+  border: 3px solid #555;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.3);
+  display: block;
+  margin-top: 50px;
+  touch-action: none;
+}
 
-  button {
-    font-size: 18px;
-    margin: 5px;
-    padding: 10px 20px;
-    border-radius: 5px;
-    border: none;
-    cursor: pointer;
-    font-weight: bold;
-  }
+button {
+  font-size: 18px;
+  margin: 5px;
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
 
-  #startBtn { background-color: #00aaff; color: white; }
-  #stopBtn { background-color: #ff4444; color: white; }
+#startBtn { background-color: #00aaff; color: white; }
+#stopBtn { background-color: #ff4444; color: white; }
 
-  #instructions {
-    margin-top: 10px;
-    text-align: center;
-    font-size: 18px;
-    max-width: 600px;
-  }
+#instructions {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 18px;
+  max-width: 600px;
+}
 
-  #scoreDisplay {
-    font-size: 24px;
-    font-weight: bold;
-    background: rgba(0,0,0,0.5);
-    padding: 5px 10px;
-    border-radius: 8px;
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-  }
+#scoreDisplay {
+  font-size: 24px;
+  font-weight: bold;
+  background: rgba(0,0,0,0.5);
+  padding: 5px 10px;
+  border-radius: 8px;
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
 </style>
 </head>
 <body>
@@ -94,18 +94,18 @@
 </audio>
 
 <script>
-// ----------------- 判断是否为手机端 -----------------
+// 判断是否手机端
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent);
 
-// 设置canvas尺寸
+// Canvas尺寸
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 let WIDTH = 600;
 let HEIGHT = 700;
 
 if(isMobile){
-  WIDTH = window.innerWidth * 0.9;  // 手机端宽度占屏幕90%
-  HEIGHT = window.innerHeight * 0.6; // 高度占屏幕60%
+  WIDTH = window.innerWidth * 0.9;
+  HEIGHT = window.innerHeight * 0.6;
 }
 canvas.width = WIDTH;
 canvas.height = HEIGHT;
@@ -120,7 +120,6 @@ for(let i=0;i<100;i++){
     speed: Math.random()*0.5+0.2
   });
 }
-
 function drawBackground(){
   const gradient = ctx.createLinearGradient(0,0,0,HEIGHT);
   gradient.addColorStop(0,"#1e1e2f");
@@ -160,20 +159,16 @@ function drawPlayer(){
   ctx.fillStyle = player.color;
   ctx.fillRect(player.x, player.y, player.width, player.height);
 }
-
 function drawBlocks(){
   ctx.fillStyle = "#ff4444";
   for(let b of blocks) ctx.fillRect(b.x,b.y,b.width,b.height);
 }
-
 function updatePlayer(){
-  // 电脑端箭头控制
   if(!isMobile){
     if(keys["ArrowLeft"] && player.x>0) player.x -= player.speed;
     if(keys["ArrowRight"] && player.x+player.width<WIDTH) player.x += player.speed;
   }
 }
-
 function updateBlocks(){
   for(let b of blocks) b.y += blockSpeed;
   blocks = blocks.filter(b=>b.y<HEIGHT);
@@ -188,21 +183,16 @@ function updateBlocks(){
     }
   }
 }
-
 function spawnBlock(){
   const size = 50;
   const x = Math.random()*(WIDTH-size);
   blocks.push({x:x, y:-size, width:size, height:size});
 }
-
-function updateScore(){
-  scoreDisplay.textContent = "分数: "+score;
-}
+function updateScore(){ scoreDisplay.textContent = "分数: "+score; }
 
 // ----------------- 游戏循环 -----------------
 function gameLoop(){
   if(!gameRunning) return;
-
   drawBackground();
   updatePlayer();
   updateBlocks();
@@ -213,7 +203,7 @@ function gameLoop(){
     if(spawnInterval>20) spawnInterval--;
     blockSpeed+=0.1;
     score++;
-    updateScore(); // 实时更新分数
+    updateScore();
   }
 
   drawPlayer();
@@ -248,26 +238,25 @@ function startGame(){
   bgMusic.play();
   gameLoop();
 }
+function stopGame(){ gameRunning=false; bgMusic.pause(); }
 
-function stopGame(){
-  gameRunning=false;
-  bgMusic.pause();
-}
-
-// 按钮绑定
 document.getElementById("startBtn").addEventListener("click", startGame);
 document.getElementById("stopBtn").addEventListener("click", stopGame);
 
-// ----------------- 手机触控拖动玩家 -----------------
+// ----------------- 手机手指拖动 -----------------
 if(isMobile){
   let touchOffsetX = 0;
   let isTouching = false;
 
   canvas.addEventListener("touchstart", e=>{
     const t = e.touches[0];
-    if(t.clientX > player.x && t.clientX < player.x + player.width &&
-       t.clientY > player.y && t.clientY < player.y + player.height){
-      touchOffsetX = t.clientX - player.x;
+    const rect = canvas.getBoundingClientRect();
+    const touchX = t.clientX - rect.left;
+    const touchY = t.clientY - rect.top;
+
+    if(touchX > player.x && touchX < player.x + player.width &&
+       touchY > player.y && touchY < player.y + player.height){
+      touchOffsetX = touchX - player.x;
       isTouching = true;
     }
   });
@@ -275,7 +264,10 @@ if(isMobile){
   canvas.addEventListener("touchmove", e=>{
     if(isTouching){
       const t = e.touches[0];
-      player.x = t.clientX - touchOffsetX;
+      const rect = canvas.getBoundingClientRect();
+      const touchX = t.clientX - rect.left;
+
+      player.x = touchX - touchOffsetX;
       if(player.x < 0) player.x = 0;
       if(player.x + player.width > WIDTH) player.x = WIDTH - player.width;
       e.preventDefault();
@@ -287,7 +279,7 @@ if(isMobile){
   });
 }
 
-// 初始显示欢迎界面
+// 初始欢迎界面
 function drawWelcome(){
   drawBackground();
   ctx.fillStyle="white";
@@ -298,6 +290,7 @@ function drawWelcome(){
   ctx.fillText("按开始按钮开始游戏", WIDTH/2, HEIGHT/2+20);
 }
 drawWelcome();
+
 </script>
 </body>
 </html>
