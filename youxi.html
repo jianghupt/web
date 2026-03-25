@@ -34,7 +34,7 @@
     border-radius: 10px;
     background: rgba(0,0,0,0.3);
     display: block;
-    margin-top: 50px; /* 页面偏上 */
+    margin-top: 20px;
     touch-action: none; /* 阻止触摸默认滚动 */
   }
 
@@ -74,7 +74,7 @@
 <body>
 
 <div id="scoreDisplay">分数: 0</div>
-<canvas id="gameCanvas" width="600" height="700"></canvas>
+<canvas id="gameCanvas"></canvas>
 
 <div>
   <button id="startBtn">开始游戏</button>
@@ -94,13 +94,29 @@
 </audio>
 
 <script>
-// ----------------- 游戏Canvas初始化 -----------------
+// ----------------- 自适应 Canvas -----------------
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-const WIDTH = canvas.width;
-const HEIGHT = canvas.height;
+let WIDTH, HEIGHT;
 
-// 粒子背景
+// 判断是否手机端
+const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+
+function resizeCanvas(){
+  if(isMobile){
+    WIDTH = window.innerWidth;
+    HEIGHT = window.innerHeight;
+  } else {
+    WIDTH = 600;
+    HEIGHT = 700;
+  }
+  canvas.width = WIDTH;
+  canvas.height = HEIGHT;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas(); // 初始化
+
+// ----------------- 粒子背景 -----------------
 const particles = [];
 for(let i=0;i<100;i++){
   particles.push({
@@ -129,7 +145,7 @@ function drawBackground(){
 }
 
 // ----------------- 玩家和障碍 -----------------
-const player = { width: 50, height: 50, x: WIDTH/2-25, y: HEIGHT-70, speed: 8, color: "#00aaff" };
+const player = { width: 50, height: 50, x: 0, y: 0, speed: 8, color: "#00aaff" };
 let blocks = [];
 let blockSpeed = 5;
 let spawnInterval = 90;
@@ -158,8 +174,10 @@ function drawBlocks(){
 
 function updatePlayer(){
   // 电脑端箭头控制
-  if(keys["ArrowLeft"] && player.x>0) player.x -= player.speed;
-  if(keys["ArrowRight"] && player.x+player.width<WIDTH) player.x += player.speed;
+  if(!isMobile){
+    if(keys["ArrowLeft"] && player.x>0) player.x -= player.speed;
+    if(keys["ArrowRight"] && player.x+player.width<WIDTH) player.x += player.speed;
+  }
 }
 
 function updateBlocks(){
@@ -225,7 +243,10 @@ function gameLoop(){
 function startGame(){
   gameOver=false;
   gameRunning=true;
-  player.x=WIDTH/2-player.width/2;
+  player.width = 50;
+  player.height = 50;
+  player.x = WIDTH/2-player.width/2;
+  player.y = HEIGHT-70;
   blocks=[];
   blockSpeed=5;
   spawnInterval=90;
@@ -259,18 +280,16 @@ canvas.addEventListener("touchstart", e => {
     player.offsetX = x - player.x;
   }
 });
-
 canvas.addEventListener("touchmove", e => {
-  if(!isTouching) return;
-  const rect = canvas.getBoundingClientRect();
-  const t = e.touches[0];
-  const x = t.clientX - rect.left;
-  player.x = x - player.offsetX;
-  if(player.x < 0) player.x = 0;
-  if(player.x + player.width > WIDTH) player.x = WIDTH - player.width;
-  e.preventDefault();
+  if(isTouching){
+    const rect = canvas.getBoundingClientRect();
+    const t = e.touches[0];
+    player.x = t.clientX - rect.left - player.offsetX;
+    if(player.x < 0) player.x = 0;
+    if(player.x + player.width > WIDTH) player.x = WIDTH - player.width;
+    e.preventDefault();
+  }
 });
-
 canvas.addEventListener("touchend", e => { isTouching = false; });
 
 // 初始显示欢迎界面
