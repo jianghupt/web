@@ -17,6 +17,7 @@
     justify-content: flex-start;
     height: 100vh;
     color: white;
+    text-align: center;
   }
 
   @keyframes gradientBG {
@@ -33,6 +34,7 @@
     background: rgba(0,0,0,0.3);
     display: block;
     margin-top: 50px; /* 页面偏上 */
+    touch-action: none; /* 阻止触摸默认滚动 */
   }
 
   button {
@@ -80,7 +82,7 @@
 
 <div id="instructions">
   <p>玩法说明：</p>
-  <p>用键盘左右方向键控制蓝色方块移动，躲避上方掉下来的红色方块。躲得越久，分数越高！</p>
+  <p>电脑端用左右箭头控制蓝色方块，手机端可用手指拖动方块，躲避红色方块，分数越高越好！</p>
 </div>
 
 <audio id="bgMusic" loop>
@@ -154,6 +156,7 @@ function drawBlocks(){
 }
 
 function updatePlayer(){
+  // 电脑端箭头控制
   if(keys["ArrowLeft"] && player.x>0) player.x -= player.speed;
   if(keys["ArrowRight"] && player.x+player.width<WIDTH) player.x += player.speed;
 }
@@ -241,6 +244,27 @@ function stopGame(){
 // 按钮绑定
 document.getElementById("startBtn").addEventListener("click", startGame);
 document.getElementById("stopBtn").addEventListener("click", stopGame);
+
+// ----------------- 手机触控拖动玩家 -----------------
+let touchOffsetX = 0;
+canvas.addEventListener("touchstart", e => {
+  const t = e.touches[0];
+  if(t.clientX > player.x && t.clientX < player.x + player.width &&
+     t.clientY > player.y && t.clientY < player.y + player.height){
+    touchOffsetX = t.clientX - player.x;
+  } else {
+    touchOffsetX = null;
+  }
+});
+canvas.addEventListener("touchmove", e => {
+  if(touchOffsetX !== null){
+    const t = e.touches[0];
+    player.x = t.clientX - touchOffsetX;
+    if(player.x < 0) player.x = 0;
+    if(player.x + player.width > WIDTH) player.x = WIDTH - player.width;
+    e.preventDefault();
+  }
+});
 
 // 初始显示欢迎界面
 function drawWelcome(){
