@@ -1,23 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Welcome!</title>
 <style>
-  /* 页面背景渐变动画 */
   body {
     margin: 0;
     height: 100vh;
     overflow: hidden;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    flex-direction: column;
     font-family: 'Arial', sans-serif;
     background: linear-gradient(-45deg, #ff6ec4, #7873f5, #42e695, #f9d423);
     background-size: 400% 400%;
     animation: gradientBG 15s ease infinite;
+    text-align: center;
   }
 
   @keyframes gradientBG {
@@ -29,13 +29,13 @@
   }
 
   h1 {
-    font-size: 4rem;
+    font-size: 8vw;
     color: white;
-    text-shadow: 2px 2px 20px rgba(0,0,0,0.5);
+    text-shadow: 2px 2px 15px rgba(0,0,0,0.5);
     animation: fadeInScale 2s ease forwards;
     opacity: 0;
     transform: scale(0.5);
-    z-index: 1;
+    margin: 0.5em 0;
   }
 
   @keyframes fadeInScale {
@@ -43,12 +43,11 @@
   }
 
   p {
-    margin-top: 1rem;
-    font-size: 1.5rem;
+    font-size: 4vw;
     color: white;
     animation: fadeIn 3s ease forwards;
     opacity: 0;
-    z-index: 1;
+    margin: 0.5em 0 1em;
   }
 
   @keyframes fadeIn {
@@ -56,9 +55,8 @@
   }
 
   button {
-    margin-top: 2rem;
-    padding: 0.8rem 2rem;
-    font-size: 1rem;
+    padding: 1em 2.5em;
+    font-size: 4vw;
     font-weight: bold;
     color: #fff;
     background: rgba(255,255,255,0.2);
@@ -67,95 +65,124 @@
     cursor: pointer;
     transition: all 0.3s ease;
     backdrop-filter: blur(5px);
-    z-index: 1;
+    margin-bottom: 2vh;
   }
 
   button:hover {
     background: rgba(255,255,255,0.4);
-    transform: scale(1.1);
+    transform: scale(1.05);
   }
 
-  /* 粒子画布 */
   canvas {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     z-index: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* ✅ 允许点击穿透 */
+  }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 10vw; }
+    p { font-size: 5vw; }
+    button { font-size: 5vw; padding: 1em 2em; }
   }
 </style>
 </head>
 <body>
-  <h1>Hello, jianghupt欢迎您</h1>
-  <p>玩个小游戏休憩下吧！！！！(公众号：jianghupt） 🚀</p>
- <button onclick="window.location.href='youxi.html'">开始小游戏</button>
-  <canvas id="particles"></canvas>
+
+<h1>Hello, jianghupt欢迎您</h1>
+<p>玩个小游戏休憩下吧！！！！(公众号：jianghupt） 🚀</p>
+<button onclick="window.location.href='youxi.html'">开始小游戏</button>
+
+<canvas id="particles"></canvas>
 
 <script>
-  // 粒子动画在浏览器端执行
-  const canvas = document.getElementById('particles');
-  const ctx = canvas.getContext('2d');
-  let width = canvas.width = window.innerWidth;
-  let height = canvas.height = window.innerHeight;
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+let width = canvas.width = window.innerWidth;
+let height = canvas.height = window.innerHeight;
 
-  window.addEventListener('resize', () => {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
+window.addEventListener('resize', () => {
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
+});
+
+const particles = [];
+const numParticles = 100;
+
+for (let i = 0; i < numParticles; i++) {
+  particles.push({
+    x: Math.random() * width,
+    y: Math.random() * height,
+    vx: (Math.random() - 0.5) * 1.5,
+    vy: (Math.random() - 0.5) * 1.5,
+    size: Math.random() * 3 + 1,
+    color: 'hsla(' + Math.random()*360 + ', 80%, 70%, 0.8)'
   });
+}
 
-  const particles = [];
-  const numParticles = 100;
+// 粒子动画
+function animate() {
+  ctx.clearRect(0, 0, width, height);
+  particles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
 
-  for (let i = 0; i < numParticles; i++) {
-    particles.push({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      vx: (Math.random() - 0.5) * 1.5,
-      vy: (Math.random() - 0.5) * 1.5,
-      size: Math.random() * 3 + 1,
-      color: 'hsla(' + Math.random()*360 + ', 80%, 70%, 0.8)'
-    });
-  }
+    if(p.x < 0 || p.x > width) p.vx *= -1;
+    if(p.y < 0 || p.y > height) p.vy *= -1;
 
-  function animate() {
-    ctx.clearRect(0, 0, width, height);
-    particles.forEach(p => {
-      p.x += p.vx;
-      p.y += p.vy;
-
-      if(p.x < 0 || p.x > width) p.vx *= -1;
-      if(p.y < 0 || p.y > height) p.vy *= -1;
-
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
-      ctx.fillStyle = p.color;
-      ctx.fill();
-    });
-    requestAnimationFrame(animate);
-  }
-  animate();
-
-  // 鼠标互动
-  const mouse = {x: null, y: null};
-  window.addEventListener('mousemove', e => {
-    mouse.x = e.x;
-    mouse.y = e.y;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+    ctx.fillStyle = p.color;
+    ctx.fill();
   });
+  requestAnimationFrame(animate);
+}
+animate();
 
-  function interact() {
-    particles.forEach(p => {
-      const dx = p.x - mouse.x;
-      const dy = p.y - mouse.y;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      if(dist < 100) {
-        const angle = Math.atan2(dy, dx);
-        const force = (100 - dist)/20;
-        p.vx += Math.cos(angle) * force;
-        p.vy += Math.sin(angle) * force;
-      }
-    });
-    requestAnimationFrame(interact);
-  }
-  interact();
+// 鼠标和触摸互动
+const pointer = {x: null, y: null};
+
+// 鼠标事件
+window.addEventListener('mousemove', e => {
+  pointer.x = e.clientX;
+  pointer.y = e.clientY;
+});
+
+// 触摸事件
+window.addEventListener('touchstart', e => {
+  const t = e.touches[0];
+  pointer.x = t.clientX;
+  pointer.y = t.clientY;
+});
+window.addEventListener('touchmove', e => {
+  const t = e.touches[0];
+  pointer.x = t.clientX;
+  pointer.y = t.clientY;
+});
+window.addEventListener('touchend', e => {
+  pointer.x = null;
+  pointer.y = null;
+});
+
+function interact() {
+  particles.forEach(p => {
+    if(pointer.x === null) return;
+    const dx = p.x - pointer.x;
+    const dy = p.y - pointer.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if(dist < 100) {
+      const angle = Math.atan2(dy, dx);
+      const force = (100 - dist)/20;
+      p.vx += Math.cos(angle) * force;
+      p.vy += Math.sin(angle) * force;
+    }
+  });
+  requestAnimationFrame(interact);
+}
+interact();
 </script>
 </body>
 </html>
